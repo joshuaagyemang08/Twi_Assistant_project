@@ -1,0 +1,57 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android" 
+    android:width="108dp" 
+    android:height="108dp" 
+    android:viewportWidth="108" 
+    android:viewportHeight="108">
+    
+    <!-- Background circle with Ghana colors -->
+    <path android:fillColor="#DC143C" 
+          android:pathData="M54,12 A42,42 0 0 1 96,54 A42,42 0 0 1 54,96 A42,42 0 0 1 12,54 A42,42 0 0 1 54,12 Z"/>
+    
+    <!-- Golden center circle -->
+    <path android:fillColor="#FFD700" 
+          android:pathData="M54,20 A34,34 0 0 1 88,54 A34,34 0 0 1 54,88 A34,34 0 0 1 20,54 A34,34 0 0 1 54,20 Z"/>
+    
+    <!-- Green inner circle -->
+    <path android:fillColor="#009639" 
+          android:pathData="M54,28 A26,26 0 0 1 80,54 A26,26 0 0 1 54,80 A26,26 0 0 1 28,54 A26,26 0 0 1 54,28 Z"/>
+    
+    <!-- White microphone body -->
+    <path android:fillColor="#FFFFFF" 
+          android:pathData="M54,38 A8,8 0 0 1 62,46 L62,54 A8,8 0 0 1 54,62 A8,8 0 0 1 46,54 L46,46 A8,8 0 0 1 54,38 Z"/>
+    
+    <!-- Microphone stand/base -->
+    <path android:fillColor="#FFFFFF" 
+          android:pathData="M52,62 L56,62 L56,68 L60,68 L60,72 L48,72 L48,68 L52,68 Z"/>
+    
+    <!-- Sound waves - left -->
+    <path android:fillColor="#FFD700" 
+          android:pathData="M38,46 Q36,48 36,50 Q36,52 38,54 Q40,52 40,50 Q40,48 38,46 Z" 
+          android:strokeWidth="2" 
+          android:strokeColor="#FFD700"/>
+    
+    <!-- Sound waves - right -->
+    <path android:fillColor="#FFD700" 
+          android:pathData="M70,46 Q72,48 72,50 Q72,52 70,54 Q68,52 68,50 Q68,48 70,46 Z" 
+          android:strokeWidth="2" 
+          android:strokeColor="#FFD700"/>
+    
+    <!-- Outer sound waves - left -->
+    <path android:fillColor="#FFFFFF" 
+          android:pathData="M32,42 Q28,46 28,50 Q28,54 32,58" 
+          android:strokeWidth="3" 
+          android:strokeColor="#FFFFFF" 
+          android:fillType="nonZero"/>
+    
+    <!-- Outer sound waves - right -->
+    <path android:fillColor="#FFFFFF" 
+          android:pathData="M76,42 Q80,46 80,50 Q80,54 76,58" 
+          android:strokeWidth="3" 
+          android:strokeColor="#FFFFFF" 
+          android:fillType="nonZero"/>
+    
+    <!-- Star accent (Ghana flag star) -->
+    <path android:fillColor="#FFFFFF" 
+          android:pathData="M54,44 L55.5,48 L59,48 L56.25,50.5 L57.75,54 L54,51.5 L50.25,54 L51.75,50.5 L49,48 L52.5,48 Z"/>
+          
+</vector>
