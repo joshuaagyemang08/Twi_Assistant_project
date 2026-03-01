@@ -454,9 +454,17 @@ class AssistantViewModel(
     private fun handleCallNameEnglish(name: String, currentState: FlowState.AwaitingEnglishName) {
         if (!validateDeviceActionsAndPermissions()) return
         
+        // Show processing during contact search
+        setSpeechAnalysis(true)
+        executedAction = "Mehwehwɛ $name..."
+        dialogState = DialogState.EXECUTE
+        
         val actions = deviceActions!!
         val allCandidates = actions.findPhoneCandidatesByName(name, maxResults = 10)
         val exactMatches = findAllExactMatches(name, allCandidates)
+        
+        // Clear processing after search
+        setSpeechAnalysis(false)
         
         // If we found matches, process them
         if (exactMatches.isNotEmpty()) {
@@ -495,9 +503,17 @@ class AssistantViewModel(
     private fun handleSmsNameEnglish(name: String, currentState: FlowState.AwaitingEnglishName) {
         if (!validateDeviceActionsAndPermissions()) return
         
+        // Show processing during contact search
+        setSpeechAnalysis(true)
+        executedAction = "Mehwehwɛ $name..."
+        dialogState = DialogState.EXECUTE
+        
         val actions = deviceActions!!
         val allCandidates = actions.findPhoneCandidatesByName(name, maxResults = 10)
         val exactMatches = findAllExactMatches(name, allCandidates)
+        
+        // Clear processing after search
+        setSpeechAnalysis(false)
         
         // If we found matches, process them
         if (exactMatches.isNotEmpty()) {
@@ -788,12 +804,27 @@ class AssistantViewModel(
         val cleanSpoken = cleanContactName(spoken).lowercase()
         val cleanCandidate = cleanContactName(candidate).lowercase()
         
-        // Exact match after cleaning
+        // Exact match after cleaning gets highest priority
         if (cleanSpoken == cleanCandidate) return 1.0
         
-        // Starts with - high score but more strict
-        if (cleanCandidate.startsWith(cleanSpoken) && cleanSpoken.length >= 3) return 0.95
-        if (cleanSpoken.startsWith(cleanCandidate) && cleanCandidate.length >= 3) return 0.9
+        // PRIORITIZE exact word matches - if spoken name matches a complete word in candidate
+        val candidateWords = cleanCandidate.split(" ")
+        val spokenWords = cleanSpoken.split(" ")
+        
+        // If spoken is a single word and matches exactly a word in candidate, very high score
+        if (spokenWords.size == 1 && candidateWords.contains(cleanSpoken)) {
+            // Prefer shorter names: "John Smith" over "John Smith Jr."
+            return if (candidateWords.size <= 2) 0.98 else 0.85
+        }
+        
+        // If all spoken words match words in candidate, high score
+        if (spokenWords.all { spokenWord -> candidateWords.any { it == spokenWord } }) {
+            return 0.95
+        }
+        
+        // Starts with - lower score to prioritize exact word matches
+        if (cleanCandidate.startsWith(cleanSpoken) && cleanSpoken.length >= 3) return 0.75
+        if (cleanSpoken.startsWith(cleanCandidate) && cleanCandidate.length >= 3) return 0.70
         
         // Stricter first 3 + last 2 letters matching
         if (cleanSpoken.length >= 4 && cleanCandidate.length >= 4) {
@@ -833,7 +864,6 @@ class AssistantViewModel(
         }
         
         // Check if spoken name is completely contained at word boundaries
-        val candidateWords = cleanCandidate.split(" ")
         for (word in candidateWords) {
             if (word.startsWith(cleanSpoken) && cleanSpoken.length >= 3) {
                 return 0.8
@@ -1427,9 +1457,6 @@ class AssistantViewModel(
     private fun handleFinal(text: String) {
         if (text == lastUtterance && dialogState == DialogState.EXECUTE) return
         
-        // INSTANT feedback: Show user was heard and processing started
-        setSpeechAnalysis(true)
-        dialogState = DialogState.EXECUTE // Show processing immediately
         lastUtterance = text
         partialTranscript = ""
         lastHeard = text
@@ -1437,13 +1464,6 @@ class AssistantViewModel(
         // User finished speaking - stop any ongoing TTS
         ttsEngine?.stop()
         
-        // Check for cancel commands first
-        if (isCancel(text)) {
-            setSpeechAnalysis(false)
-            cancelCurrentOperation()
-            return
-        }
-
         // Only four features: Calls, Messages, Open Apps, Adesua (Homework)
         when (val state = flowState) {
             is FlowState.AwaitingSmsBody -> {
@@ -1453,12 +1473,16 @@ class AssistantViewModel(
                     return
                 }
 
-                // IMMEDIATELY show processing when translation starts
-                setProcessing(true) // Start processing indicator first
-                setSpeechAnalysis(false) // Clear analysis state
+                // Show processing ONLY when translation work starts
+                setSpeechAnalysis(true) // Analysis phase first
                 executedAction = "Meresesa no..." // Translating...
                 dialogState = DialogState.EXECUTE
+                
                 viewModelScope.launch {
+                    // Switch to processing phase
+                    setSpeechAnalysis(false)
+                    setProcessing(true)
+                    
                     val messageToSend = try {
                         withContext(Dispatchers.IO) { improvedTranslateTwi(body) }
                     } catch (e: Exception) {
@@ -1641,9 +1665,17 @@ class AssistantViewModel(
     private fun handleTwiName(name: String, currentState: FlowState.AwaitingTwiName) {
         if (!validateDeviceActionsAndPermissions()) return
         
+        // Show processing during contact search
+        setSpeechAnalysis(true)
+        executedAction = "Mehwehwɛ $name..."
+        dialogState = DialogState.EXECUTE
+        
         val actions = deviceActions!!
         val allCandidates = actions.findPhoneCandidatesByName(name, maxResults = 10)
         val exactMatches = findAllExactMatches(name, allCandidates)
+        
+        // Clear processing after search
+        setSpeechAnalysis(false)
         
         // If we found matches, process them
         if (exactMatches.isNotEmpty()) {
@@ -1682,9 +1714,6 @@ class AssistantViewModel(
         val name = text.trim()
         Log.d("VM_ENGLISH", "handleEnglishFinal: text='$text' name='$name' flowState=$flowState")
         
-        // INSTANT feedback: Show user was heard and processing started
-        setSpeechAnalysis(true)
-        dialogState = DialogState.EXECUTE // Set to processing state
         partialTranscript = ""
         lastHeard = name
 
