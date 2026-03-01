@@ -16,6 +16,9 @@ import com.example.twiassistant.nlu.IntentParser
 import com.example.twiassistant.nlu.IntentResult
 import com.example.twiassistant.nlu.BrightnessAction
 import com.example.twiassistant.translation.GoogleTranslator
+import com.example.twiassistant.homework.HomeworkHelper
+import com.example.twiassistant.homework.QuestionAnswer
+import android.graphics.Bitmap
 
 
 import kotlinx.coroutines.delay
@@ -63,6 +66,10 @@ class AssistantViewModel(
             null
         }
     }
+    
+    private val homeworkHelper: HomeworkHelper by lazy {
+        HomeworkHelper(httpClient, translator, googleApiKey, googleSearchCx, geminiApiKey)
+    }
 
     private val translationCache = mutableMapOf<String, String>()
 
@@ -84,6 +91,12 @@ class AssistantViewModel(
         private set
         
     var isProcessingCommand by mutableStateOf(false)
+        private set
+    
+    var homeworkResults by mutableStateOf<List<QuestionAnswer>>(emptyList())
+        private set
+    
+    var isProcessingPhoto by mutableStateOf(false)
         private set
     
     private var processingTimeoutJob: Job? = null
@@ -214,7 +227,7 @@ class AssistantViewModel(
         return text // fallback
     }
 
-    enum class UiMode { DEFAULT, CALL, SMS, OPEN_APPS }
+    enum class UiMode { DEFAULT, CALL, SMS, OPEN_APPS, ADESUA }
     var uiMode by mutableStateOf(UiMode.DEFAULT)
         private set
 
@@ -330,6 +343,8 @@ class AssistantViewModel(
         data class AwaitingWhatsAppBody(val targetName: String) : FlowState()
         /** Awaiting app name to open. */
         data object AwaitingAppName : FlowState()
+        /** Awaiting homework question input. */
+        data object AwaitingHomeworkQuestion : FlowState()
         /** Error state: contains a user-facing error message. */
         data class Error(val message: String) : FlowState()
     }
@@ -359,8 +374,8 @@ class AssistantViewModel(
     }
 
     private fun getWelcomeMessage(): String {
-        return "Akwaaba! Metumi ayɛ nneɛma mmiɛnsa: frɛ obi, kyerɛw krataa, na bue apps."
-        // Welcome! I can do three things: call someone, write messages, and open apps.
+        return "Akwaaba! Metumi ayɛ nneɛma ɛnan: frɛ obi, kyerɛw krataa, bue apps, na boa wo wɔ adesua ho."
+        // Welcome! I can do four things: call someone, write messages, open apps, and help with homework.
     }
 
     private fun timeBasedGreetingEnglish(): String {
@@ -393,6 +408,7 @@ class AssistantViewModel(
             is FlowState.AwaitingSmsBody -> UiMode.SMS
             is FlowState.AwaitingWhatsAppBody -> UiMode.SMS
             is FlowState.AwaitingAppName -> UiMode.OPEN_APPS
+            is FlowState.AwaitingHomeworkQuestion -> UiMode.ADESUA
             is FlowState.AwaitingCommandTwi -> UiMode.DEFAULT
             is FlowState.Error -> UiMode.DEFAULT
             is FlowState.Idle -> UiMode.DEFAULT
@@ -518,7 +534,7 @@ class AssistantViewModel(
             lastGreetingTime = currentTime
             setFlowState(FlowState.AwaitingCommandTwi)
             // Greeting - TTS engine will handle the pacing naturally
-            executedAction = "Akwaaba! Metumi ayɛ nneɛma mmiɛnsa... frɛ obi... kyerɛw krataa... na bue apps."
+            executedAction = "Akwaaba! Metumi ayɛ nneɛma ɛnan... frɛ obi... kyerɛw krataa... bue apps... na boa wo wɔ adesua ho."
             lastError = ""
         }
     }
@@ -1110,6 +1126,138 @@ class AssistantViewModel(
         lastError = ""
     }
 
+    fun onAdesuaFeatureSelected() {
+        uiMode = UiMode.ADESUA
+        executedAction = "Yoo! Me bɛboa wo. Kyerɛ me nsɛmmisa a wopɛ sɛ miboa wo."
+        setFlowState(FlowState.AwaitingHomeworkQuestion)
+        lastError = ""
+    }
+    
+    /**
+     * Process homework photo (printed or handwritten)
+     * Extracts text, finds questions, and answers them
+     */
+    fun processHomeworkPhoto(bitmap: Bitmap) {
+        viewModelScope.launch {
+            try {
+                isProcessingPhoto = true
+                homeworkResults = emptyList()
+                executedAction = "Mekyere krataa no..." // Searching the paper...
+                lastError = ""
+                
+                // Step 1: Extract text from image using OCR
+                val extractedText = homeworkHelper.extractTextFromImage(bitmap)
+                
+                if (extractedText.isBlank()) {
+                    executedAction = ""
+                    lastError = "Mentumi nkenkan krataa no. Fa foto bio." // Couldn't read the paper. Take photo again.
+                    isProcessingPhoto = false
+                    return@launch
+                }
+                
+                Log.d("HomeworkPhoto", "Extracted text: $extractedText")
+                
+                // Step 2: Process questions and get answers
+                val qaList = homeworkHelper.processHomework(extractedText)
+                
+                if (qaList.isEmpty()) {
+                    executedAction = ""
+                    lastError = "Menhuu nsɛmmisa biara. Fa foto bio." // Didn't find any questions. Take photo again.
+                    isProcessingPhoto = false
+                    return@launch
+                }
+                
+                // Results already have Twi answers from HomeworkHelper
+                homeworkResults = qaList
+                
+                // Step 3: Create summary message
+                val summary = if (qaList.size == 1) {
+                    "Manyaa mmuaeɛ no. ${qaList[0].answerTwi}" // Found the answer.
+                } else {
+                    "Manyaa nsɛmmisa ${qaList.size}. Hwɛ mmuaeɛ no wɔ screen no so." // Found ${count} questions. See answers on screen.
+                }
+                
+                executedAction = summary
+                lastError = ""
+                isProcessingPhoto = false
+                
+            } catch (e: Exception) {
+                Log.e("HomeworkPhoto", "Processing failed", e)
+                executedAction = ""
+                lastError = "Asɛm bi asi. Fa foto bio." // Something went wrong. Take photo again.
+                isProcessingPhoto = false
+            }
+        }
+    }
+    
+    /**
+     * Clear homework results
+     */
+    fun clearHomeworkResults() {
+        homeworkResults = emptyList()
+    }
+
+    // Handle homework question input - with translation and search
+    private fun handleHomeworkQuestion(question: String) {
+        executedAction = "Mekyere nsɛmmisa no..." // Searching for the question...
+        Log.d("HomeworkQuestion", "Starting to process question: '$question'")
+        
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // Show progress
+                withContext(Dispatchers.Main) {
+                    executedAction = "Rekyerɛ kɔ English mu..." // Translating to English...
+                }
+                
+                Log.d("HomeworkQuestion", "Calling homeworkHelper.answerVoiceQuestion...")
+                
+                // Process the question: Twi -> English -> Search -> Twi
+                val result = homeworkHelper.answerVoiceQuestion(question)
+                
+                Log.d("HomeworkQuestion", "Got result - QuestionTwi: '${result.questionTwi}'")
+                Log.d("HomeworkQuestion", "QuestionEnglish: '${result.questionEnglish}'")
+                Log.d("HomeworkQuestion", "AnswerEnglish: '${result.answerEnglish}'")
+                Log.d("HomeworkQuestion", "AnswerTwi: '${result.answerTwi}'")
+                Log.d("HomeworkQuestion", "Images: ${result.imageUrls.size}")
+                
+                // Update UI on main thread
+                withContext(Dispatchers.Main) {
+                    // Store the result for UI display
+                    homeworkResults = listOf(result)
+                    
+                    // Show the answer
+                    if (result.answerTwi.isNotBlank()) {
+                        executedAction = result.answerTwi
+                        Log.d("HomeworkQuestion", "Set executedAction to: '${result.answerTwi}'")
+                        
+                        // Force TTS to speak the answer
+                        ttsEngine?.speak(result.answerTwi)
+                    } else {
+                        executedAction = "Me nnim mmuae no. Bisa me nsɛmmisa foforɔ." // I don't know the answer. Ask another question.
+                        ttsEngine?.speak(executedAction)
+                    }
+                    
+                    lastError = ""
+                    // Stay in ADESUA mode so user can ask more questions
+                    // Don't reset to Idle
+                }
+                
+            } catch (e: Exception) {
+                Log.e("HomeworkQuestion", "Error processing homework question", e)
+                e.printStackTrace()
+                
+                withContext(Dispatchers.Main) {
+                    executedAction = "Mfomsoɔ baa hɔ. Mepa wo kyɛw, ka wo nsɛmmisa no bio."
+                    lastError = "Homework processing error: ${e.message}"
+                    homeworkResults = emptyList()
+                    
+                    // Speak the error
+                    ttsEngine?.speak("Mfomsoɔ baa hɔ. Mepa wo kyɛw, ka wo nsɛmmisa no bio.")
+                }
+            }
+        }
+    }
+
     private suspend fun readUnreadMessages(): String = withContext(Dispatchers.IO) {
         val actions = deviceActions ?: return@withContext "Entumi mma krataa no."
         if (!actions.hasReadSmsPermission()) {
@@ -1263,7 +1411,7 @@ class AssistantViewModel(
             return
         }
 
-        // Only three features: Calls, Messages, Open Apps
+        // Only four features: Calls, Messages, Open Apps, Adesua (Homework)
         when (val state = flowState) {
             is FlowState.AwaitingSmsBody -> {
                 val body = text.trim()
@@ -1357,6 +1505,17 @@ class AssistantViewModel(
                 return
             }
             
+            is FlowState.AwaitingHomeworkQuestion -> {
+                val question = text.trim()
+                if (question.lowercase() in listOf("ka", "cancel", "back", "home", "fie")) {
+                    executedAction = "Ok, me san kɔɔ fie."
+                    setFlowState(FlowState.Idle)
+                    return
+                }
+                handleHomeworkQuestion(question)
+                return
+            }
+            
             else -> {
                 // Handle Twi name input in AwaitingTwiName state
                 if (flowState is FlowState.AwaitingTwiName) {
@@ -1421,6 +1580,14 @@ class AssistantViewModel(
                 promptTwi = "Dɛn app na wopɛ sɛ mebue?",
                 mode = SlotMode.OPEN_APP
             )
+            return
+        }
+
+        // --- Homework (Adesua) ---
+        if (lower.trim() == "adesua") {
+            uiMode = UiMode.ADESUA
+            executedAction = "Yoo! Me bɛboa wo. Kyerɛ me nsɛmmisa a wopɛ sɛ miboa wo."
+            setFlowState(FlowState.AwaitingHomeworkQuestion)
             return
         }
 
@@ -2058,6 +2225,7 @@ class AssistantViewModel(
             is FlowState.AwaitingSmsBody -> "Ka asɛm a wopɛ sɛ mekɔma ${state.targetName}" // Say the message you want to send to...
             is FlowState.AwaitingWhatsAppBody -> "Ka asɛm a wopɛ sɛ mekɔma ${state.targetName} wɔ Whats App so" // Say the message you want to send to... on WhatsApp
             is FlowState.AwaitingAppName -> "Ka app a wopɛ sɛ mebue no din" // Say the name of the app you want to open
+            is FlowState.AwaitingHomeworkQuestion -> "Ka nsɛmmisa a wowɔ" // Ask your question
             is FlowState.Error -> state.message
             else -> "Medwene ho..." // I'm thinking about it...
         }
