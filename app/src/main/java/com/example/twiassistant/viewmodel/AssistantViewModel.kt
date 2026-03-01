@@ -99,7 +99,11 @@ class AssistantViewModel(
     var isProcessingPhoto by mutableStateOf(false)
         private set
     
+    var isAnalyzingSpeech by mutableStateOf(false)
+        private set
+    
     private var processingTimeoutJob: Job? = null
+    private var speechAnalysisJob: Job? = null
     
     private fun setProcessing(value: Boolean) {
         isProcessingCommand = value
@@ -114,6 +118,24 @@ class AssistantViewModel(
                 if (isProcessingCommand) {
                     Log.w("AssistantVM", "Processing state stuck - forcing reset after 10s timeout")
                     isProcessingCommand = false
+                }
+            }
+        }
+    }
+    
+    private fun setSpeechAnalysis(value: Boolean) {
+        isAnalyzingSpeech = value
+        
+        // Cancel any existing timeout
+        speechAnalysisJob?.cancel()
+        
+        // If setting to true, start a safety timeout
+        if (value) {
+            speechAnalysisJob = viewModelScope.launch {
+                delay(5000) // 5 second timeout for speech analysis
+                if (isAnalyzingSpeech) {
+                    Log.w("AssistantVM", "Speech analysis stuck - forcing reset after 5s timeout")
+                    isAnalyzingSpeech = false
                 }
             }
         }
@@ -261,6 +283,8 @@ class AssistantViewModel(
     private fun showFriendlyError(message: String) {
         lastError = message
         executedAction = ""
+        setProcessing(false)
+        setSpeechAnalysis(false)
         dialogState = DialogState.IDLE
     }
 
@@ -461,7 +485,9 @@ class AssistantViewModel(
             else -> {
                 // Final attempt failed after 3 tries
                 executedAction = "Menhu din yi wɔ wo contacts mu. Mepa wo kyɛw, hwɛ din no anaa ka 'home' sɛ wo pɛ sɛ wo kɔ home."
+                setSpeechAnalysis(false)
                 setFlowState(FlowState.Idle)
+                dialogState = DialogState.IDLE
             }
         }
     }
@@ -1405,8 +1431,13 @@ class AssistantViewModel(
         // User finished speaking - stop any ongoing TTS
         ttsEngine?.stop()
         
+        // Start speech analysis phase
+        setSpeechAnalysis(true)
+        dialogState = DialogState.EXECUTE // Changed from IDLE to EXECUTE to indicate processing
+        
         // Check for cancel commands first
         if (isCancel(text)) {
+            setSpeechAnalysis(false)
             cancelCurrentOperation()
             return
         }
@@ -1445,7 +1476,9 @@ class AssistantViewModel(
                         showFriendlyError("Manhu din no wɔ wo contacts mu")
                     }
                     setProcessing(false)
+                    setSpeechAnalysis(false)
                     setFlowState(FlowState.Idle)
+                    dialogState = DialogState.IDLE
                 }
                 return
             }
@@ -1488,6 +1521,7 @@ class AssistantViewModel(
                         executedAction = "Whats App sending error - no contact or actions available"
                     }
                     setProcessing(false)
+                    setSpeechAnalysis(false)
                     setFlowState(FlowState.Idle)
                     dialogState = DialogState.IDLE
                 }
@@ -1643,7 +1677,10 @@ class AssistantViewModel(
         Log.d("VM_ENGLISH", "handleEnglishFinal: text='$text' name='$name' flowState=$flowState")
         partialTranscript = ""
         lastHeard = name
-        dialogState = DialogState.IDLE
+        
+        // Start analyzing English speech input
+        setSpeechAnalysis(true)
+        dialogState = DialogState.EXECUTE // Set to processing state
 
         englishAutoRetryAttempts = 0
 
@@ -1669,29 +1706,29 @@ class AssistantViewModel(
 
                 when (state.mode) {
                     SlotMode.CALL -> {
-                        dialogState = DialogState.EXECUTE
                         handleCallNameEnglish(name, state)
                     }
 
                     SlotMode.SMS -> {
-                        dialogState = DialogState.EXECUTE
                         handleSmsNameEnglish(name, state)
                     }
                     
                     SlotMode.OPEN_APP -> {
-                        dialogState = DialogState.EXECUTE
                         handleAppNameInput(name)
                     }
                 }
             }
-            
+
             is FlowState.AwaitingSmsBody, is FlowState.AwaitingWhatsAppBody -> {
                 // Redirect to Twi for message content
-                    showFriendlyError("Mepa wo kyɛw, ka asɛm no wɔ Twi mu.")
+                setSpeechAnalysis(false)
+                showFriendlyError("Mepa wo kyɛw, ka asɛm no wɔ Twi mu.")
             }
 
             else -> {
-                // Ignore unexpected English input
+                // Ignore unexpected English input  
+                setSpeechAnalysis(false)
+                dialogState = DialogState.IDLE
             }
         }
     }
@@ -2234,7 +2271,11 @@ class AssistantViewModel(
     // Cancel current operation
     fun cancelCurrentOperation() {
         _pendingChoice = null
+        setProcessing(false)
+        setSpeechAnalysis(false)
+        isProcessingPhoto = false
         setFlowState(FlowState.Idle)
+        dialogState = DialogState.IDLE
         speak(" Me gyae... Dɛn bio?") // Ok, I've stopped... What else?
     }
     

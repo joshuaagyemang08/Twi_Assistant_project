@@ -452,10 +452,12 @@ fun AssistantHomeScreen(viewModel: AssistantViewModel = defaultAssistantViewMode
             .fillMaxSize()
             .background(BackgroundGradient)
     ) {
-        // State tracking
+        // State tracking - Fixed priority and comprehensive processing detection
         val isListening = dialogState == DialogState.LISTENING
         val isSpeaking = isTtsSpeaking
-        val isProcessing = dialogState == DialogState.EXECUTE && !isSpeaking || viewModel.isProcessingCommand
+        val isProcessing = viewModel.isProcessingCommand || viewModel.isProcessingPhoto || 
+                          (dialogState == DialogState.EXECUTE && !isSpeaking) ||
+                          viewModel.isAnalyzingSpeech
         val isActive = isListening || isProcessing || isSpeaking
         
         // Animation  
@@ -466,6 +468,10 @@ fun AssistantHomeScreen(viewModel: AssistantViewModel = defaultAssistantViewMode
             isListening -> Pair(
                 Brush.radialGradient(listOf(Color(0xFF16A34A), Color(0xFF22C55E))), // Green gradient
                 Color(0xFF14532D) // Darker green border
+            )
+            viewModel.isAnalyzingSpeech -> Pair(
+                Brush.radialGradient(listOf(Color(0xFF7C3AED), Color(0xFF8B5CF6))), // Purple gradient for analysis
+                Color(0xFF5B21B6) // Darker purple border
             )
             isProcessing -> Pair(
                 Brush.radialGradient(listOf(Color(0xFF2563EB), Color(0xFF3B82F6))), // Blue gradient for processing
@@ -547,6 +553,7 @@ fun AssistantHomeScreen(viewModel: AssistantViewModel = defaultAssistantViewMode
                 // Status text - Design Specification Twi  
                 val statusText = when {
                     isListening -> "Metie wo..."  // Listening...
+                    viewModel.isAnalyzingSpeech -> "Merehu nsɛm no..." // Analyzing speech...
                     isProcessing -> "Merekyerɛw..." // Processing...
                     isSpeaking -> "Merekasa..." // Speaking...  
                     else -> "Mesrɛ wo, mia ha na kasa" // Please tap here to speak
@@ -563,6 +570,7 @@ fun AssistantHomeScreen(viewModel: AssistantViewModel = defaultAssistantViewMode
                 // English translation (optional)
                 val englishText = when {
                     isListening -> "Listening..."
+                    viewModel.isAnalyzingSpeech -> "Analyzing..."
                     isProcessing -> "Processing..." 
                     isSpeaking -> "Speaking..."
                     else -> "Tap here to speak"
@@ -622,6 +630,7 @@ fun AssistantHomeScreen(viewModel: AssistantViewModel = defaultAssistantViewMode
                             
                             val ringColor = when {
                                 isListening -> GhanaGreen
+                                viewModel.isAnalyzingSpeech -> Color(0xFF7C3AED) // Purple for analysis
                                 isProcessing -> SecondaryAmber
                                 isSpeaking -> SecondaryAmber
                                 else -> GhanaRed
@@ -692,6 +701,13 @@ fun AssistantHomeScreen(viewModel: AssistantViewModel = defaultAssistantViewMode
                                     SoundWaveIcon(
                                         modifier = Modifier.size(32.dp),
                                         color = TextLight
+                                    )
+                                }
+                                viewModel.isAnalyzingSpeech -> {
+                                    // Brain/thinking icon for speech analysis
+                                    Text(
+                                        text = "🧠",
+                                        fontSize = 32.sp
                                     )
                                 }
                                 isProcessing -> {
