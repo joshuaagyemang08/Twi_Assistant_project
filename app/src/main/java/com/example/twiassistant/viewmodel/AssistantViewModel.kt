@@ -1426,16 +1426,16 @@ class AssistantViewModel(
 
     private fun handleFinal(text: String) {
         if (text == lastUtterance && dialogState == DialogState.EXECUTE) return
+        
+        // INSTANT feedback: Show user was heard and processing started
+        setSpeechAnalysis(true)
+        dialogState = DialogState.EXECUTE // Show processing immediately
         lastUtterance = text
         partialTranscript = ""
         lastHeard = text
         
         // User finished speaking - stop any ongoing TTS
         ttsEngine?.stop()
-        
-        // IMMEDIATELY start analysis phase when speech processing begins
-        setSpeechAnalysis(true)
-        dialogState = DialogState.EXECUTE // Show processing immediately
         
         // Check for cancel commands first
         if (isCancel(text)) {
@@ -1681,12 +1681,12 @@ class AssistantViewModel(
     private fun handleEnglishFinal(text: String) {
         val name = text.trim()
         Log.d("VM_ENGLISH", "handleEnglishFinal: text='$text' name='$name' flowState=$flowState")
-        partialTranscript = ""
-        lastHeard = name
         
-        // Start analyzing English speech input
+        // INSTANT feedback: Show user was heard and processing started
         setSpeechAnalysis(true)
         dialogState = DialogState.EXECUTE // Set to processing state
+        partialTranscript = ""
+        lastHeard = name
 
         englishAutoRetryAttempts = 0
 
