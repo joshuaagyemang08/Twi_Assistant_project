@@ -248,7 +248,7 @@ class AssistantViewModel(
         }
 
         if (!deviceActions.hasReadContactsPermission()) {
-            showFriendlyError("Mepa wo kyɛw, ma me kwan na menhwɛ wo contacts mu.")
+            showFriendlyError("Mepa wo kyɛw, ma me kwan na menh wɛ wo contacts mu.")
             return false
         }
 
@@ -279,7 +279,7 @@ class AssistantViewModel(
                 executedAction = "Manya ${contact.displayName}. Merefrɛ no seesei."
             } else {
                 _pendingChoice = PendingChoice.MessageChoice(contact = contact, originalName = originalName)
-                executedAction = "Wopɛ sɛ mede SMS anaa WhatsApp? Ka 'SMS' anaa 'WhatsApp'."
+                executedAction = "Wopɛ sɛ mede SMS anaa WhatsApp?"
                 setFlowState(FlowState.AwaitingCommandTwi)
                 return
             }
@@ -1142,7 +1142,7 @@ class AssistantViewModel(
             try {
                 isProcessingPhoto = true
                 homeworkResults = emptyList()
-                executedAction = "Merehwehwɛ krataa no mu..." // Searching the paper...
+                executedAction = "Merehwehwɛ krataa no mu..."
                 lastError = ""
                 
                 // Step 1: Extract text from image using OCR
@@ -1184,7 +1184,7 @@ class AssistantViewModel(
             } catch (e: Exception) {
                 Log.e("HomeworkPhoto", "Processing failed", e)
                 executedAction = ""
-                lastError = "Mepa wo kyɛw, asɛm bi asi. San yɛ bio." // Something went wrong. Take photo again.
+                lastError = "Mepa wo kyɛw, asɛm bi asi. San yɛ bio."
                 isProcessingPhoto = false
             }
         }
@@ -1199,14 +1199,14 @@ class AssistantViewModel(
 
     // Handle homework question input - with translation and search
     private fun handleHomeworkQuestion(question: String) {
-        executedAction = "Merehwehwɛ mmuaeɛ no ama wo..." // Searching for the question...
+        executedAction = "Merehwehwɛ mmuaeɛ no ama wo..."
         Log.d("HomeworkQuestion", "Starting to process question: '$question'")
         
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 // Show progress
                 withContext(Dispatchers.Main) {
-                    executedAction = "Meresesa no kɔ Borɔfo mu..." // Translating to English...
+                    executedAction = "Meresesa no kɔ Borɔfo mu..."
                 }
                 
                 Log.d("HomeworkQuestion", "Calling homeworkHelper.answerVoiceQuestion...")
@@ -1592,7 +1592,7 @@ class AssistantViewModel(
         }
 
         // If not recognized, show friendly error
-        showFriendlyError("Mepa wo kyɛw, mentee asɛm no. Mepa wo kyɛw, san ka bio.")
+        showFriendlyError("Mfomsoɔ bi aba. Mepa wo kyɛw, san ka asɛm no bio.")
     }
 
     /**
@@ -1917,7 +1917,7 @@ class AssistantViewModel(
         
         _pendingChoice = null
         setFlowState(FlowState.Idle)
-        executedAction = "Ma gyae. Adɛn bio na wo pɛ sɛ men yɛ ma wo?" // I've stopped. What else?
+        executedAction = "Ma gyae. Adɛn bio na wo pɛ sɛ men yɛ ma wo?"
     }
 
     
