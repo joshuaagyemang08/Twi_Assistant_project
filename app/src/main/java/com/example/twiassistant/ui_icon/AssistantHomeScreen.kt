@@ -240,7 +240,8 @@ fun AssistantHomeScreen(viewModel: AssistantViewModel = defaultAssistantViewMode
         onResult = { granted ->
             callPermissionGranted = granted
             if (granted) {
-                viewModel.completePendingCallIfAny()?.let { tts.speak(it) }
+                // Permission granted - user should retry their call command
+                // No need to auto-complete pending call, let user re-initiate
             } else if (shouldOpenSettingsAfterCallDenied()) {
                 tts.speak("Mma din no ammu dea, sɔ Settings no na fa permission no")
                 openAppSettings()
@@ -765,7 +766,7 @@ fun AssistantHomeScreen(viewModel: AssistantViewModel = defaultAssistantViewMode
                 
                 Spacer(Modifier.height(16.dp))
                 
-                // Feature Cards in 2x2 Grid
+                // Feature Cards in Single Row
                 Column(
                     modifier = Modifier.padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -793,12 +794,7 @@ fun AssistantHomeScreen(viewModel: AssistantViewModel = defaultAssistantViewMode
                             onClick = { viewModel.onMessageFeatureSelected() },
                             modifier = Modifier.weight(1f)
                         )
-                    }
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
+                        
                         // 3. Open Apps Feature  
                         FeatureCard(
                             title = "Bue Apps",
@@ -806,16 +802,6 @@ fun AssistantHomeScreen(viewModel: AssistantViewModel = defaultAssistantViewMode
                             icon = "📱",
                             accentColor = GhanaRed,
                             onClick = { viewModel.onOpenAppFeatureSelected() },
-                            modifier = Modifier.weight(1f)
-                        )
-                        
-                        // 4. Homework/Study Feature
-                        FeatureCard(
-                            title = "Adesua",
-                            subtitle = "Homework",
-                            icon = "🎓",
-                            accentColor = SecondaryAmber,
-                            onClick = { viewModel.onAdesuaFeatureSelected() },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -829,7 +815,6 @@ fun AssistantHomeScreen(viewModel: AssistantViewModel = defaultAssistantViewMode
                         AssistantViewModel.UiMode.CALL -> GhanaGreen
                         AssistantViewModel.UiMode.SMS -> GhanaGold  
                         AssistantViewModel.UiMode.OPEN_APPS -> GhanaRed
-                        AssistantViewModel.UiMode.ADESUA -> SecondaryAmber
                         else -> TextMuted
                     }
                     
@@ -854,7 +839,6 @@ fun AssistantHomeScreen(viewModel: AssistantViewModel = defaultAssistantViewMode
                                     AssistantViewModel.UiMode.CALL -> "📞 Frɛ"
                                     AssistantViewModel.UiMode.SMS -> "💬 Krataa"
                                     AssistantViewModel.UiMode.OPEN_APPS -> "📱 Bue Apps"
-                                    AssistantViewModel.UiMode.ADESUA -> "🎓 Adesua"
                                     else -> ""
                                 },
                                 fontSize = 18.sp,
@@ -867,7 +851,6 @@ fun AssistantHomeScreen(viewModel: AssistantViewModel = defaultAssistantViewMode
                                     AssistantViewModel.UiMode.CALL -> "Ka din no wɔ borɔfo (English)"
                                     AssistantViewModel.UiMode.SMS -> "Din no wɔ borɔfo; asɛm no wɔ Twi"
                                     AssistantViewModel.UiMode.OPEN_APPS -> "Ka app no din"
-                                    AssistantViewModel.UiMode.ADESUA -> "Ka wo nsɛmmisa no"
                                     else -> ""
                                 },
                                 fontSize = 14.sp,
@@ -879,15 +862,7 @@ fun AssistantHomeScreen(viewModel: AssistantViewModel = defaultAssistantViewMode
                 }
             
                 Spacer(Modifier.height(24.dp))
-                
-                // Homework Results Display - shows English content with Twi captions
-                if (uiMode == AssistantViewModel.UiMode.ADESUA && viewModel.homeworkResults.isNotEmpty()) {
-                    HomeworkResultsCard(
-                        results = viewModel.homeworkResults,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-                    Spacer(Modifier.height(24.dp))
-                }
+
                 
                 // Permission button if needed
                 if (!micPermissionGranted) {
@@ -1712,137 +1687,3 @@ private fun MessageTypePickerOverlay(
     }
 }
 
-/**
- * Display homework results with images and bilingual content
- * Shows English content for reading with Twi captions
- */
-@Composable
-fun HomeworkResultsCard(
-    results: List<com.example.twiassistant.homework.QuestionAnswer>,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-    ) {
-        results.forEach { result: com.example.twiassistant.homework.QuestionAnswer ->
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = Color.White,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .border(
-                        width = 2.dp,
-                        color = SecondaryAmber,
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .shadow(4.dp, RoundedCornerShape(16.dp))
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    // Images if available
-                    if (result.imageUrls.isNotEmpty()) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            result.imageUrls.forEach { imageUrl: String ->
-                                AsyncImage(
-                                    model = imageUrl,
-                                    contentDescription = "Related image",
-                                    modifier = Modifier
-                                        .size(120.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .border(1.dp, SecondaryAmber.copy(alpha = 0.3f), RoundedCornerShape(8.dp)),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
-                        }
-                        Spacer(Modifier.height(12.dp))
-                    }
-                    
-                    // Answer in English (for reading/display)
-                    if (result.answerEnglish.isNotBlank()) {
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = GhanaGreen.copy(alpha = 0.1f),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(12.dp)
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.Top
-                                ) {
-                                    Text(
-                                        text = "📖",
-                                        fontSize = 18.sp,
-                                        modifier = Modifier.padding(end = 8.dp)
-                                    )
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = "English:",
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = GhanaGreen
-                                        )
-                                        Spacer(Modifier.height(4.dp))
-                                        Text(
-                                            text = result.answerEnglish,
-                                            fontSize = 14.sp,
-                                            color = TextDark,
-                                            lineHeight = 20.sp
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        
-                        Spacer(Modifier.height(8.dp))
-                    }
-                    
-                    // Answer in Twi (caption - what was spoken)
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = SecondaryAmber.copy(alpha = 0.15f),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(12.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                Text(
-                                    text = "🔊",
-                                    fontSize = 18.sp,
-                                    modifier = Modifier.padding(end = 8.dp)
-                                )
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Twi (Nsɛm a ɛka):",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = SecondaryAmber
-                                    )
-                                    Spacer(Modifier.height(4.dp))
-                                    Text(
-                                        text = result.answerTwi,
-                                        fontSize = 14.sp,
-                                        color = TextDark,
-                                        lineHeight = 20.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}

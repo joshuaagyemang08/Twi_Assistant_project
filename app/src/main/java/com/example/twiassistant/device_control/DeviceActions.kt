@@ -217,7 +217,7 @@ class DeviceActions(private val context: Context) {
     }
 
     fun adjustBrightness(action: com.example.twiassistant.nlu.BrightnessAction, percent: Int? = null): Boolean {
-        // Brightness control removed - not needed for simplified assistant (Calls, Messages, Apps, Adesua only)
+        // Brightness control removed - not needed for simplified assistant (Calls, Messages, Apps only)
         return false
     }
 
