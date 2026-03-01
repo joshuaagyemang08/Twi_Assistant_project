@@ -303,7 +303,7 @@ class AssistantViewModel(
                 executedAction = "Manya ${contact.displayName}. Merefrɛ no seesei."
             } else {
                 _pendingChoice = PendingChoice.MessageChoice(contact = contact, originalName = originalName)
-                executedAction = "Wopɛ sɛ mede SMS anaa WhatsApp?"
+                executedAction = "Wopɛ sɛ mede dia ɛwɔ he kyerɛ?"
                 setFlowState(FlowState.AwaitingCommandTwi)
                 return
             }
@@ -1452,8 +1452,9 @@ class AssistantViewModel(
                 }
 
                 executedAction = "Meresesa no..." // Translating...
+                setSpeechAnalysis(false) // Clear analysis state
+                setProcessing(true) // Start processing for translation
                 dialogState = DialogState.EXECUTE
-                isProcessingCommand = true
                 viewModelScope.launch {
                     val messageToSend = try {
                         withContext(Dispatchers.IO) { improvedTranslateTwi(body) }
@@ -1490,8 +1491,9 @@ class AssistantViewModel(
                     return
                 }
                 executedAction = "Processing... Meresesa Twi kɔ Borɔfo mu..." // Processing... Translating Twi to English...
+                setSpeechAnalysis(false) // Clear analysis state
+                setProcessing(true) // Start processing for translation
                 dialogState = DialogState.EXECUTE // Show we're actively working
-                isProcessingCommand = true
                 viewModelScope.launch {
                     // Always translate Twi input to English
                     val messageToSend = try {
@@ -1890,9 +1892,9 @@ class AssistantViewModel(
                 setFlowState(FlowState.Idle)
             }
             is PendingChoice.SmsName -> {
-                // Show SMS vs WhatsApp choice immediately
+                // Show SMS vs WhatsApp choice immediately  
                 _pendingChoice = PendingChoice.MessageChoice(contact, "messaging")
-                executedAction = "Wopɛ sɛ mede SMS anaa WhatsApp?"
+                executedAction = "Wopɛ sɛ mede dia ɛwɔ he kyerɛ?"
                 // Don't change flow state - let the UI handle the choice
             }
             is PendingChoice.MessageChoice -> {
