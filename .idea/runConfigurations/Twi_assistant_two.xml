@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Twi_assistant_two" type="AndroidRunConfigurationType" factoryName="Android App">
+    <module name="app" />
+  </configuration>
+</component>
