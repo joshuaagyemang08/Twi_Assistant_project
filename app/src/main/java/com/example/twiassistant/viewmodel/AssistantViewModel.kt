@@ -234,7 +234,7 @@ class AssistantViewModel(
         }
 
         if (!deviceActions.hasReadContactsPermission()) {
-            showFriendlyError("Mepa wo ky?w, ma me kwan na menh w? wo contacts mu.")
+            showFriendlyError("Mepa wo kyɛw, ma me kwan na menh wɔ wo contacts mu.")
             return false
         }
 
@@ -264,10 +264,10 @@ class AssistantViewModel(
             val contact = matches[0]
             if (isCall) {
                 deviceActions?.dialOrCall(contact.number)
-                executedAction = "Manya ${contact.displayName}. Merefr? no seesei."
+                executedAction = "Manya ${contact.displayName}. Merefrɛ no seesei."
             } else {
                 _pendingChoice = PendingChoice.MessageChoice(contact = contact, originalName = originalName)
-                executedAction = "Wop? s? mede dia ?w? he kyer??"
+                executedAction = "Wopɛ sɛ mede dia ?wɔ he kyer??"
                 setFlowState(FlowState.AwaitingCommandTwi)
                 return
             }
@@ -357,7 +357,7 @@ class AssistantViewModel(
     }
 
     private fun getWelcomeMessage(): String {
-        return "Akwaaba! Metumi aboa wo w? nne?ma abi?sa ho: fr? obi, kyer?w krataa, anaa bue apps."
+        return "Akwaaba! Metumi aboa wo wɔ nneɛma abiɛsa ho: frɛ obi, kyer?w krataa, anaa bue apps."
         // Welcome! I can do three things: call someone, write messages, and open apps.
     }
 
@@ -414,7 +414,7 @@ class AssistantViewModel(
         
         // Show processing during contact search
         setSpeechAnalysis(true)
-        executedAction = "Mehwehw? $name..."
+        executedAction = "Mehwehwɔ $name..."
         dialogState = DialogState.EXECUTE
         
         val actions = deviceActions!!
@@ -440,12 +440,12 @@ class AssistantViewModel(
         when (currentState.attemptCount) {
             0 -> {
                 // First English attempt failed, switch to Twi
-                executedAction = "Mepa wo ky?w, mentee din no yie. San b? m'aso bio."
+                executedAction = "Mepa wo kyɛw, mentee din no yie. San bɛ m'aso bio."
                 setFlowState(FlowState.AwaitingTwiName(SlotMode.CALL, attemptCount = 1))
             }
             else -> {
                 // Second English attempt (after Twi) failed - give up after 3 total tries
-                executedAction = "Menhu din yi w? wo contacts mu. Mepa wo ky?w, hw? din no anaa ka 'home' s? wo p? s? wo k? home."
+                executedAction = "Menhu din yi wɔ wo contacts mu. Mepa wo kyɛw, hwɔ din no anaa ka 'home' sɛ wo pɛ sɛ wo k? home."
                 setSpeechAnalysis(false)
                 setFlowState(FlowState.Idle)
                 dialogState = DialogState.IDLE
@@ -458,7 +458,7 @@ class AssistantViewModel(
         
         // Show processing during contact search
         setSpeechAnalysis(true)
-        executedAction = "Mehwehw? $name..."
+        executedAction = "Mehwehwɔ $name..."
         dialogState = DialogState.EXECUTE
         
         val actions = deviceActions!!
@@ -484,12 +484,12 @@ class AssistantViewModel(
         when (currentState.attemptCount) {
             0 -> {
                 // First English attempt failed, switch to Twi
-                executedAction = "Mepa wo ky?w, mentee din no yie. San b? m'aso bio."
+                executedAction = "Mepa wo kyɛw, mentee din no yie. San bɛ m'aso bio."
                 setFlowState(FlowState.AwaitingTwiName(SlotMode.SMS, attemptCount = 1))
             }
             else -> {
                 // Second English attempt (after Twi) failed - give up after 3 total tries
-                executedAction = "Menhu din yi w? wo contacts mu. Mepa wo ky?w, hw? din no anaa ka 'home' s? wo p? s? wo k? home."
+                executedAction = "Menhu din yi wɔ wo contacts mu. Mepa wo kyɛw, hwɔ din no anaa ka 'home' sɛ wo pɛ sɛ wo k? home."
                 setFlowState(FlowState.Idle)
             }
         }
@@ -513,7 +513,7 @@ class AssistantViewModel(
             lastGreetingTime = currentTime
             setFlowState(FlowState.AwaitingCommandTwi)
             // Greeting - TTS engine will handle the pacing naturally
-            executedAction = "Akwaaba! Metumi aboa wo w? nne?ma abi?sa ho: fr? obi, kyer?w krataa, anaa bue apps."
+            executedAction = "Akwaaba! Metumi aboa wo wɔ nneɛma abiɛsa ho: frɛ obi, kyer?w krataa, anaa bue apps."
             lastError = ""
         }
     }
@@ -523,7 +523,7 @@ class AssistantViewModel(
             is FlowState.AwaitingEnglishName -> {
                 val eng = englishRecognizer
                 if (eng == null) {
-                    showFriendlyError("Me ntumi nkasa Bor?fo. Fa Twi ka.")
+                    showFriendlyError("Me ntumi nkasa borɔfo. Fa Twi ka.")
                     return
                 }
 
@@ -558,7 +558,7 @@ class AssistantViewModel(
             is FlowState.AwaitingEnglishName -> {
                 val eng = englishRecognizer
                 if (eng == null) {
-                    showFriendlyError("Me ntumi nkasa Bor?fo. Fa Twi ka.")
+                    showFriendlyError("Me ntumi nkasa borɔfo. Fa Twi ka.")
                     return
                 }
 
@@ -676,7 +676,7 @@ class AssistantViewModel(
                         executedAction = "Merebue $matchedAppName."
                         setFlowState(FlowState.Idle)
                     } else {
-                        showFriendlyError("Mepa wo ky?w, mentumi nbue $matchedAppName")
+                        showFriendlyError("Mepa wo kyɛw, mentumi nbue $matchedAppName")
                     }
                 }
                 return
@@ -697,7 +697,7 @@ class AssistantViewModel(
                     executedAction = "Merebue $appToLaunch."
                     setFlowState(FlowState.Idle)
                 } else {
-                    showFriendlyError("Mepa wo ky?w, mentumi nbue $appToLaunch.")
+                    showFriendlyError("Mepa wo kyɛw, mentumi nbue $appToLaunch.")
                 }
             }
         } else {
@@ -1100,21 +1100,21 @@ class AssistantViewModel(
     // Feature icon handlers - called when user taps feature icons
     fun onCallFeatureSelected() {
         uiMode = UiMode.CALL
-        executedAction = "Mepa wo ky?w, hena na wop? s? mefr??"
+        executedAction = "Mepa wo kyɛw, hena na wopɛ sɛ mefr??"
         setFlowState(FlowState.AwaitingEnglishName(SlotMode.CALL))
         lastError = ""
     }
 
     fun onMessageFeatureSelected() {
         uiMode = UiMode.SMS
-        executedAction = "Hena na wop? s? mekyer?w krataa no k?ma?"
+        executedAction = "Hena na wopɛ sɛ mekyer?w krataa no k?ma?"
         setFlowState(FlowState.AwaitingEnglishName(SlotMode.SMS))
         lastError = ""
     }
 
     fun onOpenAppFeatureSelected() {
         uiMode = UiMode.OPEN_APPS
-        executedAction = "App b?n na wop? s? mebue?"
+        executedAction = "App b?n na wopɛ sɛ mebue?"
         setFlowState(FlowState.AwaitingEnglishName(SlotMode.OPEN_APP))
         lastError = ""
     }
@@ -1210,7 +1210,7 @@ class AssistantViewModel(
                     hour = parsedNum
                     minute = 0
                 } else {
-                    lastError = "Mepa wo ky?w, ka bere no bio. Ka nn?nhwerew ne simma no."
+                    lastError = "Mepa wo kyɛw, ka bere no bio. Ka nn?nhwerew ne simma no."
                     executedAction = ""
                     dialogState = DialogState.IDLE
                     return
@@ -1219,7 +1219,7 @@ class AssistantViewModel(
         }
 
         if (hour < 0 || hour > 23) {
-            lastError = "Mepa wo ky?w, ka bere pa. Nn?nhwerew 0 k?si 23."
+            lastError = "Mepa wo kyɛw, ka bere pa. Nn?nhwerew 0 k?si 23."
             executedAction = ""
             dialogState = DialogState.IDLE
             return
@@ -1238,7 +1238,7 @@ class AssistantViewModel(
         val timeStr = String.format(Locale.ROOT, "%d:%02d", hour, minute)
         val success = actions.setAlarm(timeStr)
         if (success) {
-            executedAction = "Masiesie alarm ama wo w? $timeStr."
+            executedAction = "Masiesie alarm ama wo wɔ $timeStr."
             lastError = ""
         } else {
             lastError = "Entumi ansiesie alarm no."
@@ -1272,7 +1272,7 @@ class AssistantViewModel(
             is FlowState.AwaitingSmsBody -> {
                 val body = text.trim()
                 if (body.isBlank()) {
-                    showFriendlyError("Ka as?m no bio.")
+                    showFriendlyError("Ka asɛm no bio.")
                     return
                 }
 
@@ -1298,13 +1298,13 @@ class AssistantViewModel(
                         val intent = IntentResult.SendSms(nameOrNumber = contact.number, body = messageToSend, c = 0.9f)
                         val result = performAction(intent)
                         executedAction = if (result != null) {
-                            "As?m no ak?"
+                            "asɛm no ak?"
                         } else {
                             "Entumi ansoma"
                         }
                         selectedSmsContact = null
                     } else {
-                        showFriendlyError("Manhu din no w? wo contacts mu")
+                        showFriendlyError("Manhu din no wɔ wo contacts mu")
                     }
                     setProcessing(false)
                     setSpeechAnalysis(false)
@@ -1317,13 +1317,13 @@ class AssistantViewModel(
             is FlowState.AwaitingWhatsAppBody -> {
                 val body = text.trim()
                 if (body.isBlank()) {
-                    showFriendlyError("Ka as?m no bio.")
+                    showFriendlyError("Ka asɛm no bio.")
                     return
                 }
                 // IMMEDIATELY show processing when translation starts
                 setProcessing(true) // Start processing indicator first
                 setSpeechAnalysis(false) // Clear analysis state
-                executedAction = "Meresesa Twi k? Bor?fo mu..." // Translating Twi to English...
+                executedAction = "Meresesa Twi k? borɔfo mu..." // Translating Twi to English...
                 dialogState = DialogState.EXECUTE // Show we're actively working
                 viewModelScope.launch {
                     // Always translate Twi input to English
@@ -1345,7 +1345,7 @@ class AssistantViewModel(
                     if (contact != null && actions != null) {
                         val success = actions.sendWhatsAppMessage(contact.number, messageToSend)
                         executedAction = if (success) {
-                            "Whats App as?m no... ak?" // WhatsApp message... sent
+                            "Whats App asɛm no... ak?" // WhatsApp message... sent
                         } else {
                             "Whats App... entumi ansoma" // WhatsApp... could not send
                         }
@@ -1391,7 +1391,7 @@ class AssistantViewModel(
                 executedAction = result
                 lastError = ""
             } else {
-                lastError = "Mepa wo ky?w, ka 'baako' anaa 'mmienu'."
+                lastError = "Mepa wo kyɛw, ka 'baako' anaa 'mmienu'."
                 executedAction = ""
             }
             dialogState = DialogState.IDLE
@@ -1408,12 +1408,12 @@ class AssistantViewModel(
                 val intent = IntentResult.CallNumber(number = number, c = 0.9f)
                 dialogState = DialogState.EXECUTE
                 val result = performAction(intent)
-                executedAction = result ?: "Mentumi amfr? n?mba no"
+                executedAction = result ?: "Mentumi amfrɛ n?mba no"
                 setFlowState(FlowState.Idle)
                 return
             }
             startEnglishListeningWithPrompt(
-                promptTwi = "Hwan na wop? s? wofr??",
+                promptTwi = "Hwan na wopɛ sɛ wofr??",
                 mode = SlotMode.CALL
             )
             return
@@ -1423,7 +1423,7 @@ class AssistantViewModel(
         if (lower.contains("ky?r?") || lower.contains("krataa") || lower.contains("sms")) {
             uiMode = UiMode.SMS
             startEnglishListeningWithPrompt(
-                promptTwi = "Hwan na wop? s? wokyer??",
+                promptTwi = "Hwan na wopɛ sɛ wokyer??",
                 mode = SlotMode.SMS
             )
             return
@@ -1433,7 +1433,7 @@ class AssistantViewModel(
         if (lower.contains("bue")) {
             uiMode = UiMode.OPEN_APPS
             startEnglishListeningWithPrompt(
-                promptTwi = "D?n app na wop? s? mebue?",
+                promptTwi = "D?n app na wopɛ sɛ mebue?",
                 mode = SlotMode.OPEN_APP
             )
             return
@@ -1442,7 +1442,7 @@ class AssistantViewModel(
 
 
         // If not recognized, show friendly error
-        showFriendlyError("Mfomso? bi aba. Mepa wo ky?w, san ka as?m no bio.")
+        showFriendlyError("mfomsoɔ bi aba. Mepa wo kyɛw, san ka asɛm no bio.")
     }
 
     /**
@@ -1453,7 +1453,7 @@ class AssistantViewModel(
         
         // Show processing during contact search
         setSpeechAnalysis(true)
-        executedAction = "Mehwehw? $name..."
+        executedAction = "Mehwehwɔ $name..."
         dialogState = DialogState.EXECUTE
         
         val actions = deviceActions!!
@@ -1484,7 +1484,7 @@ class AssistantViewModel(
             }
             else -> {
                 // Final attempt failed
-                executedAction = "Mentumi anhu din no w? wo contacts mu. Hw? s? din no w? h? anaa ka 'ka' s? wop? s? wo san k? fie."
+                executedAction = "Mentumi anhu din no wɔ wo contacts mu. Hwɔ s? din no wɔ h? anaa ka 'ka' sɛ wopɛ sɛ wo san k? fie."
                 setFlowState(FlowState.Idle)
             }
         }
@@ -1521,7 +1521,7 @@ class AssistantViewModel(
             is FlowState.AwaitingEnglishName -> {
                 Log.d("VM_ENGLISH", "Processing English name: $name, attempt: ${state.attemptCount}")
                 if (name.isBlank()) {
-                    showFriendlyError("Mepa wo ky?w, ka din no bio.")
+                    showFriendlyError("Mepa wo kyɛw, ka din no bio.")
                     return
                 }
 
@@ -1543,7 +1543,7 @@ class AssistantViewModel(
             is FlowState.AwaitingSmsBody, is FlowState.AwaitingWhatsAppBody -> {
                 // Redirect to Twi for message content
                 setSpeechAnalysis(false)
-                showFriendlyError("Mepa wo ky?w, ka as?m no w? Twi mu.")
+                showFriendlyError("Mepa wo kyɛw, ka asɛm no wɔ Twi mu.")
             }
 
             else -> {
@@ -1573,16 +1573,16 @@ class AssistantViewModel(
 
         if (current is FlowState.AwaitingEnglishName) {
             val errorMsg = when (code) {
-                6, 7 -> "Mentee. S? bio."
-                5, 8 -> "Tw?n kakra na s? bio."
+                6, 7 -> "Mentee. sɛ bio."
+                5, 8 -> "Tw?n kakra na sɛ bio."
                 9 -> "Mic kwan nni h?."
-                else -> "As?m bi aba. S? bio."
+                else -> "asɛm bi aba. sɛ bio."
             }
             showFriendlyError(errorMsg)
             return
         }
 
-        showFriendlyError("Mepa wo ky?w, as?m bi asi. San y? bio.")
+        showFriendlyError("Mepa wo kyɛw, asɛm bi asi. San yɛ bio.")
         setFlowState(FlowState.AwaitingCommandTwi)
     }
 
@@ -1602,7 +1602,7 @@ class AssistantViewModel(
 
             withContext(Dispatchers.Main) {
                 if (translated.isNullOrBlank()) {
-                    lastError = "Entumi anhu ns?m w? internet so" // couldn't find info
+                    lastError = "Entumi anhu ns?m wɔ internet so" // couldn't find info
                     executedAction = ""
                 } else {
                     executedAction = translated
@@ -1662,17 +1662,17 @@ class AssistantViewModel(
         // Convert technical errors to user-friendly messages
         lastError = when {
             message.contains("Speech error 6", ignoreCase = true) || message.contains("ERROR_NO_MATCH", ignoreCase = true) ->
-                "Mepa wo ky?w, mentee. Mia ha na s? bio."
+                "Mepa wo kyɛw, mentee. Mia ha na sɛ bio."
             message.contains("Speech error 7", ignoreCase = true) || message.contains("ERROR_SPEECH_TIMEOUT", ignoreCase = true) ->
-                "Mepa wo ky?w, mentee. Mia ha na s? bio."
+                "Mepa wo kyɛw, mentee. Mia ha na sɛ bio."
             message.contains("Speech error 5", ignoreCase = true) || message.contains("ERROR_CLIENT", ignoreCase = true) ->
                 "Mic no rey? adwuma. Tw?n kakra."
             message.contains("Speech error 8", ignoreCase = true) || message.contains("ERROR_RECOGNIZER_BUSY", ignoreCase = true) ->
                 "Mic no rey? adwuma. Tw?n kakra."
             message.contains("Speech error 9", ignoreCase = true) || message.contains("permission", ignoreCase = true) ->
-                "Mepa wo ky?w, mic permission no nni h?."
+                "Mepa wo kyɛw, mic permission no nni h?."
             message.contains("network", ignoreCase = true) || message.contains("internet", ignoreCase = true) ->
-                "Internet nni h?. Hw? wo connection."
+                "Internet nni h?. Hwɔ wo connection."
             else -> message // Keep original message if not a known technical error
         }
         partialTranscript = ""
@@ -1698,14 +1698,14 @@ class AssistantViewModel(
                 val actions = deviceActions
                 if (actions != null && actions.hasCallPhonePermission()) {
                     actions.dialOrCall(contact.number)
-                    executedAction = "Merefr? ${contact.displayName}. Mepa wo ky?w, tw?n kakra."
+                    executedAction = "Merefrɛ ${contact.displayName}. Mepa wo kyɛw, tw?n kakra."
                     // Speak the action
                     viewModelScope.launch {
                         delay(100) // Brief delay to let TTS engine process
                         ttsEngine?.speak(executedAction)
                     }
                 } else {
-                    executedAction = "Ma kwan na menya fr? permission"
+                    executedAction = "Ma kwan na menya frɛ permission"
                 }
                 _pendingChoice = null
                 setFlowState(FlowState.Idle)
@@ -1714,7 +1714,7 @@ class AssistantViewModel(
             is PendingChoice.SmsName -> {
                 // Show SMS vs WhatsApp choice immediately  
                 _pendingChoice = PendingChoice.MessageChoice(contact, "messaging")
-                executedAction = "Wop? s? mede dia ?w? he kyer??"
+                executedAction = "Wopɛ sɛ mede dia ?wɔ he kyer??"
                 // Don't change flow state - let the UI handle the choice
             }
             is PendingChoice.MessageChoice -> {
@@ -1780,7 +1780,7 @@ class AssistantViewModel(
         _pendingChoice = null
         setFlowState(FlowState.Idle)
         dialogState = DialogState.IDLE
-        executedAction = "Ma gyae. Ad?n bio na wo p? s? men y? ma wo?"
+        executedAction = "Ma gyae. Ad?n bio na wo pɛ sɛ men y? ma wo?"
     }
 
     
@@ -1794,11 +1794,11 @@ class AssistantViewModel(
         
         // Go directly to Twi message input (will translate to English before sending)
         if (useWhatsApp) {
-            speak("Ka as?m no w? Twi mu.") // Say the message in Twi
+            speak("Ka asɛm no wɔ Twi mu.") // Say the message in Twi
             setFlowState(FlowState.AwaitingWhatsAppBody(targetName = contact.number))
             selectedWhatsAppContact = contact
         } else {
-            speak("Ka as?m no w? Twi mu.") // Say the message in Twi
+            speak("Ka asɛm no wɔ Twi mu.") // Say the message in Twi
             setFlowState(FlowState.AwaitingSmsBody(targetName = contact.number))
             selectedSmsContact = contact
         }
@@ -1824,11 +1824,11 @@ class AssistantViewModel(
     }
 
     private fun describeAction(intent: IntentResult): String = when (intent) {
-        is IntentResult.CallContact -> "Refr? ${intent.name}"
-        is IntentResult.CallNumber -> "Refr? n?mba ${intent.number}"
+        is IntentResult.CallContact -> "Refrɛ ${intent.name}"
+        is IntentResult.CallNumber -> "Refrɛ n?mba ${intent.number}"
         is IntentResult.SendSms -> "Rekyer?w SMS k?ma ${intent.nameOrNumber}"
         is IntentResult.ReadMessages -> "Reb?kenkan nkyer?w"
-        is IntentResult.SetAlarm -> "Resie aboter? w? ${intent.timeText}"
+        is IntentResult.SetAlarm -> "Resie aboter? wɔ ${intent.timeText}"
         is IntentResult.OpenApp -> "Rebue ${intent.appName}"
         is IntentResult.StatusQuery -> intent.topic
         is IntentResult.MenuSelection -> "Menu option ${intent.option}"
@@ -1856,7 +1856,7 @@ class AssistantViewModel(
                                 "Please allow Sheri to make calls"
                             } else {
                                 actions.dialOrCall(number)
-                                "Refr? ${intent.name}"
+                                "Refrɛ ${intent.name}"
                             }
                         } else {
                             val candidates = actions.findPhoneCandidatesByName(intent.name, maxResults = 3)
@@ -1870,7 +1870,7 @@ class AssistantViewModel(
                         "Please allow Sheri to make calls"
                     } else {
                         actions.dialOrCall(intent.number)
-                        "Refr? n?mba ${intent.number}"
+                        "Refrɛ n?mba ${intent.number}"
                     }
                 }
                 is IntentResult.SendSms -> {
@@ -1928,7 +1928,7 @@ class AssistantViewModel(
                     // Check if we have permission first
                     if (!actions.canWriteSettings()) {
                         actions.openWriteSettingsPermission()
-                        "Mepa wo ky?w, mma Sheri akwan na ?nsesa hann. S? toggle no w? page a ?b?bue no so."
+                        "Mepa wo kyɛw, mma Sheri akwan na ?nsesa hann. S? toggle no wɔ page a ?bɛbue no so."
                     } else {
                         val ok = actions.adjustBrightness(intent.action, intent.percent)
                         if (ok) {
@@ -1972,9 +1972,9 @@ class AssistantViewModel(
         _pendingChoice = PendingChoice.Call(candidates = candidateList)
         
         return if (c != null && c.score >= 0.50) {
-            "Me huu nnipa pii a w?n din te s? eyi. Wop? s? merefr? ${a.displayName}, ${b.displayName}, anaa ${c.displayName}? Ka 'baako', 'mmienu', anaa 'mmi?nsa'."
+            "Me huu nnipa pii a w?n din te s? eyi. Wopɛ sɛ merefrɛ ${a.displayName}, ${b.displayName}, anaa ${c.displayName}? Ka 'baako', 'mmienu', anaa 'mmi?nsa'."
         } else {
-            "Me huu nnipa pii a w?n din te s? eyi. Wop? s? merefr? ${a.displayName} anaa ${b.displayName}? Ka 'baako' anaa 'mmienu'."
+            "Me huu nnipa pii a w?n din te s? eyi. Wopɛ sɛ merefrɛ ${a.displayName} anaa ${b.displayName}? Ka 'baako' anaa 'mmienu'."
         }
     }
 
@@ -1985,7 +1985,7 @@ class AssistantViewModel(
         if (a.score < 0.55 || b.score < 0.50) return null
 
         _pendingChoice = PendingChoice.Sms(body = body, candidates = listOf(a, b))
-        return "Me huu nnipa pii a w?n din te s? eyi. Wop? s? mekyer?w SMS k?ma ${a.displayName} anaa ${b.displayName}? Ka 'baako' anaa 'mmienu'."
+        return "Me huu nnipa pii a w?n din te s? eyi. Wopɛ sɛ mekyer?w SMS k?ma ${a.displayName} anaa ${b.displayName}? Ka 'baako' anaa 'mmienu'."
     }
 
     private fun maybeAskToDisambiguateSmsName(candidates: List<DeviceActions.ContactMatch>): String? {
@@ -1995,7 +1995,7 @@ class AssistantViewModel(
         if (a.score < 0.55 || b.score < 0.50) return null
 
         _pendingChoice = PendingChoice.SmsName(candidates = listOf(a, b))
-        return "Me huu nnipa pii a w?n din te s? eyi. Wop? s? mekyer?w SMS k?ma ${a.displayName} anaa ${b.displayName}? Ka 'baako' anaa 'mmienu'."
+        return "Me huu nnipa pii a w?n din te s? eyi. Wopɛ sɛ mekyer?w SMS k?ma ${a.displayName} anaa ${b.displayName}? Ka 'baako' anaa 'mmienu'."
     }
 
     private fun handlePendingChoice(pending: PendingChoice, utterance: String): String? {
@@ -2051,11 +2051,11 @@ class AssistantViewModel(
                     "Please allow Sheri to make calls"
                 } else {
                     actions.dialOrCall(choice.number)
-                    "Refr? ${choice.displayName}"
+                    "Refrɛ ${choice.displayName}"
                 }
             }
             is PendingChoice.SmsName -> {
-                executedAction = "Ka as?m a wop? s? mekyer? k?ma ${choice.displayName}." // say the message (Twi)
+                executedAction = "Ka asɛm a wopɛ sɛ mekyer? k?ma ${choice.displayName}." // say the message (Twi)
                 lastError = ""
                 setFlowState(FlowState.AwaitingSmsBody(targetName = choice.number))
                 // User presses button manually - no auto-listen
@@ -2084,10 +2084,10 @@ class AssistantViewModel(
     fun getCurrentStateDescription(): String {
         return when (val state = flowState) {
             is FlowState.Idle -> "Me gyina ha, ka biara a wob?ka" // I'm ready, say anything
-            is FlowState.AwaitingSmsBody -> "Ka as?m a wop? s? mek?ma ${state.targetName}" // Say the message you want to send to...
-            is FlowState.AwaitingWhatsAppBody -> "Ka as?m a wop? s? mek?ma ${state.targetName} w? Whats App so" // Say the message you want to send to... on WhatsApp
-            is FlowState.AwaitingAppName -> "Ka app a wop? s? mebue no din" // Say the name of the app you want to open
-            is FlowState.AwaitingAppName -> "Ka app a wop? s? mebue no din" // Say the name of the app you want to open
+            is FlowState.AwaitingSmsBody -> "Ka asɛm a wopɛ sɛ mek?ma ${state.targetName}" // Say the message you want to send to...
+            is FlowState.AwaitingWhatsAppBody -> "Ka asɛm a wopɛ sɛ mek?ma ${state.targetName} wɔ Whats App so" // Say the message you want to send to... on WhatsApp
+            is FlowState.AwaitingAppName -> "Ka app a wopɛ sɛ mebue no din" // Say the name of the app you want to open
+            is FlowState.AwaitingAppName -> "Ka app a wopɛ sɛ mebue no din" // Say the name of the app you want to open
             is FlowState.Error -> state.message
             else -> "Medwene ho..." // I'm thinking about it...
         }

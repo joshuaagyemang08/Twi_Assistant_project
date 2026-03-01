@@ -1,4 +1,4 @@
-package com.example.twiassistant.ui_icon
+﻿package com.example.twiassistant.ui_icon
 
 import android.Manifest
 import android.app.Activity
@@ -180,10 +180,10 @@ fun AssistantHomeScreen(viewModel: AssistantViewModel = defaultAssistantViewMode
             Uri.fromParts("package", context.packageName, null)
         ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(intent)
-    }
+    } 
 
     fun shouldOpenSettingsAfterDenied(): Boolean {
-        val activity = context as? Activity ?: return false
+        val activity = context as Activity ?: return false
         // If we've requested once and the system won't show rationale anymore,
         // it usually means "Don't ask again" (or policy restriction).
         return contactsPermissionRequestedOnce &&
@@ -230,7 +230,7 @@ fun AssistantHomeScreen(viewModel: AssistantViewModel = defaultAssistantViewMode
     }
 
     fun shouldOpenSettingsAfterCallDenied(): Boolean {
-        val activity = context as? Activity ?: return false
+        val activity = context as Activity ?: return false
         return callPermissionRequestedOnce &&
             !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CALL_PHONE)
     }
@@ -1302,7 +1302,7 @@ private fun ContactPickerOverlay(
         is AssistantViewModel.PendingChoice.SmsName -> {
             val uniqueNames = contacts.map { it.displayName.lowercase() }.distinct()
             if (uniqueNames.size == 1 && contacts.size > 1) {
-                "Hwan na wopɛ sɛ wokyerɛw? (Hwɛ nɔma mu)" // Which one do you want to text? (Check the numbers)
+                "Hwan na wopɛ sɛ wokyerɛwɔ (Hwɛ nɔma mu)" // Which one do you want to text? (Check the numbers)
             } else {
                 "Hwan na wopɛ sɛ wokyerɛw?" // Which one do you want to text?
             }
@@ -1310,7 +1310,7 @@ private fun ContactPickerOverlay(
         is AssistantViewModel.PendingChoice.Sms -> {
             val uniqueNames = contacts.map { it.displayName.lowercase() }.distinct()
             if (uniqueNames.size == 1 && contacts.size > 1) {
-                "Hwan na wopɛ sɛ wokyerɛw? (Hwɛ nɔma mu)" // Which one do you want to text? (Check the numbers)
+                "Hwan na wopɛ sɛ wokyerɛwɔ (Hwɛ nɔma mu)" // Which one do you want to text? (Check the numbers)
             } else {
                 "Hwan na wopɛ sɛ wokyerɛw?" // Which one do you want to text?
             }
