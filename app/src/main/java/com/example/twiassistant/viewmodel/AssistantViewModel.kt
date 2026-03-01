@@ -1164,12 +1164,14 @@ class AssistantViewModel(
      * Extracts text, finds questions, and answers them
      */
     fun processHomeworkPhoto(bitmap: Bitmap) {
+        // Show processing feedback immediately when function starts
+        isProcessingPhoto = true
+        homeworkResults = emptyList()
+        executedAction = "Merehwehwɛ krataa no mu..."
+        lastError = ""
+        
         viewModelScope.launch {
             try {
-                isProcessingPhoto = true
-                homeworkResults = emptyList()
-                executedAction = "Merehwehwɛ krataa no mu..."
-                lastError = ""
                 
                 // Step 1: Extract text from image using OCR
                 val extractedText = homeworkHelper.extractTextFromImage(bitmap)
@@ -1431,9 +1433,9 @@ class AssistantViewModel(
         // User finished speaking - stop any ongoing TTS
         ttsEngine?.stop()
         
-        // Start speech analysis phase
+        // IMMEDIATELY start analysis phase when speech processing begins
         setSpeechAnalysis(true)
-        dialogState = DialogState.EXECUTE // Changed from IDLE to EXECUTE to indicate processing
+        dialogState = DialogState.EXECUTE // Show processing immediately
         
         // Check for cancel commands first
         if (isCancel(text)) {
@@ -1451,9 +1453,10 @@ class AssistantViewModel(
                     return
                 }
 
-                executedAction = "Meresesa no..." // Translating...
+                // IMMEDIATELY show processing when translation starts
+                setProcessing(true) // Start processing indicator first
                 setSpeechAnalysis(false) // Clear analysis state
-                setProcessing(true) // Start processing for translation
+                executedAction = "Meresesa no..." // Translating...
                 dialogState = DialogState.EXECUTE
                 viewModelScope.launch {
                     val messageToSend = try {
@@ -1490,9 +1493,10 @@ class AssistantViewModel(
                     showFriendlyError("Ka asɛm no bio.")
                     return
                 }
-                executedAction = "Processing... Meresesa Twi kɔ Borɔfo mu..." // Processing... Translating Twi to English...
+                // IMMEDIATELY show processing when translation starts
+                setProcessing(true) // Start processing indicator first
                 setSpeechAnalysis(false) // Clear analysis state
-                setProcessing(true) // Start processing for translation
+                executedAction = "Meresesa Twi kɔ Borɔfo mu..." // Translating Twi to English...
                 dialogState = DialogState.EXECUTE // Show we're actively working
                 viewModelScope.launch {
                     // Always translate Twi input to English
