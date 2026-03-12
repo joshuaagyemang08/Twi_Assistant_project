@@ -299,15 +299,65 @@ class DeviceActions(private val context: Context) {
         context.startActivity(intent)
     }
 
+    /**
+     * Format phone number for WhatsApp international format
+     * Handles Ghana phone numbers and converts them to proper international format
+     * Examples:
+     * - "0245876597" -> "233245876597"
+     * - "+233245876597" -> "233245876597" 
+     * - "233245876597" -> "233245876597"
+     * - "+0245876597" -> "233245876597" (fixes invalid format)
+     */
+    private fun formatPhoneNumberForWhatsApp(number: String): String {
+        // Remove all non-digit characters except +
+        var cleanNumber = number.replace(Regex("[^0-9+]"), "")
+        
+        // Remove leading + if present
+        if (cleanNumber.startsWith("+")) {
+            cleanNumber = cleanNumber.substring(1)
+        }
+        
+        // Handle Ghana phone numbers
+        return when {
+            // If already starts with 233 (Ghana country code)
+            cleanNumber.startsWith("233") -> cleanNumber
+            
+            // If starts with 0 (local Ghana format) - convert to international
+            cleanNumber.startsWith("0") && cleanNumber.length >= 10 -> {
+                "233" + cleanNumber.substring(1) // Replace 0 with 233
+            }
+            
+            // If it's a Ghana mobile number without country code or leading 0
+            // Ghana mobile numbers typically start with: 20, 24, 25, 26, 27, 28, 50, 54, 55, 56, 57, 59
+            cleanNumber.length == 9 && cleanNumber.matches(Regex("(20|2[4-8]|5[04-79])\\d{7}")) -> {
+                "233$cleanNumber"
+            }
+            
+            // For any number that might be incorrectly formatted (like +0245876597)
+            // Extract the core Ghana number and reformat
+            cleanNumber.matches(Regex("0?(2[0-9]|5[0-9])\\d{7}")) -> {
+                val coreNumber = if (cleanNumber.startsWith("0")) {
+                    cleanNumber.substring(1)
+                } else {
+                    cleanNumber
+                }
+                "233$coreNumber"
+            }
+            
+            // Default: return as is if we can't identify the format
+            else -> cleanNumber
+        }
+    }
+
     fun sendWhatsAppMessage(number: String, body: String): Boolean {
         if (number.isBlank() || body.isBlank()) return false
         
         return try {
-            // Clean the number (remove spaces, dashes, etc.)
-            val cleanNumber = number.replace(Regex("[^0-9+]"), "")
+            // Format the number to international format for WhatsApp
+            val formattedNumber = formatPhoneNumberForWhatsApp(number)
             
             // Try WhatsApp with tel: scheme first (more reliable)
-            val whatsappUri = "https://api.whatsapp.com/send?phone=$cleanNumber&text=${Uri.encode(body)}"
+            val whatsappUri = "https://api.whatsapp.com/send?phone=$formattedNumber&text=${Uri.encode(body)}"
             val whatsappIntent = Intent(Intent.ACTION_VIEW, Uri.parse(whatsappUri)).apply {
                 setPackage("com.whatsapp") // Target WhatsApp specifically
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
