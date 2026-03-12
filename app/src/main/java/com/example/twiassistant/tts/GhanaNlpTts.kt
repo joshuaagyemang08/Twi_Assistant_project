@@ -29,6 +29,10 @@ class GhanaNlpTts(
     // Track last spoken text to prevent duplicates
     private var lastSpokenText: String = ""
     private var lastSpokenTime: Long = 0
+    
+    // Chunk queue for sequential playback
+    private val chunkQueue = mutableListOf<String>()
+    private var isPlayingChunks = false
 
     override fun speak(text: String, onComplete: (() -> Unit)?) {
         val trimmed = text.trim()
@@ -55,14 +59,206 @@ class GhanaNlpTts(
         // Store callback
         onCompleteCallback = onComplete
 
+        // Split text into chunks to prevent audio breakages
+        val chunks = splitIntoChunks(trimmed)
+        
+        if (chunks.size == 1) {
+            // Single chunk - speak directly
+            val url = baseUrl.trimEnd('/') + "/synthesize"
+            enqueueSynthesize(url = url, text = trimmed, language = language, speakerId = speakerId, allowFallback = true)
+        } else {
+            // Multiple chunks - queue them for sequential playback
+            Log.d(TAG, "Splitting text into ${chunks.size} chunks for smoother playback")
+            chunkQueue.clear()
+            chunkQueue.addAll(chunks)
+            playNextChunk()
+        }
+    }
+    
+    private fun splitIntoChunks(text: String): List<String> {
+        // Split by sentence-ending punctuation (period, question mark, exclamation)
+        val sentences = text.split(Regex("[.!?]+\\s+"))
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+        
+        if (sentences.isEmpty()) return listOf(text)
+        
+        val chunks = mutableListOf<String>()
+        var currentChunk = StringBuilder()
+        
+        for (sentence in sentences) {
+            // If adding this sentence exceeds max chunk size, save current chunk
+            if (currentChunk.isNotEmpty() && currentChunk.length + sentence.length > MAX_CHUNK_SIZE) {
+                chunks.add(currentChunk.toString().trim())
+                currentChunk = StringBuilder()
+            }
+            
+            if (currentChunk.isNotEmpty()) {
+                currentChunk.append(" ")
+            }
+            currentChunk.append(sentence)
+            
+            // If chunk is getting large, finalize it
+            if (currentChunk.length >= MAX_CHUNK_SIZE) {
+                chunks.add(currentChunk.toString().trim())
+                currentChunk = StringBuilder()
+            }
+        }
+        
+        // Add remaining text
+        if (currentChunk.isNotEmpty()) {
+            chunks.add(currentChunk.toString().trim())
+        }
+        
+        // If no chunks were created, return original text
+        return if (chunks.isEmpty()) listOf(text) else chunks
+    }
+    
+    private fun playNextChunk() {
+        if (chunkQueue.isEmpty()) {
+            isPlayingChunks = false
+            // All chunks played - invoke completion callback
+            onCompleteCallback?.invoke()
+            onCompleteCallback = null
+            return
+        }
+        
+        isPlayingChunks = true
+        val chunk = chunkQueue.removeAt(0)
         val url = baseUrl.trimEnd('/') + "/synthesize"
-        enqueueSynthesize(url = url, text = trimmed, language = language, speakerId = speakerId, allowFallback = true)
+        
+        // Speak this chunk with a callback to play the next one
+        enqueueSynthesizeChunk(url = url, text = chunk, language = language, speakerId = speakerId, allowFallback = true)
     }
 
     override fun stop() {
+        // Clear chunk queue to stop sequential playback
+        chunkQueue.clear()
+        isPlayingChunks = false
+        
         mediaPlayer?.stop()
         mediaPlayer?.release()
         mediaPlayer = null
+        
+        // Clear any pending callbacks
+        onCompleteCallback = null
+    }
+    
+    private fun enqueueSynthesizeChunk(
+        url: String,
+        text: String,
+        language: String,
+        speakerId: String,
+        allowFallback: Boolean,
+    ) {
+        val payload = JSONObject()
+            .put("text", text)
+            .put("language", language)
+            .put("speaker_id", speakerId)
+
+        Log.d(TAG, "GhanaNLP TTS chunk -> POST $url (language=$language speaker_id=$speakerId textLen=${text.length})")
+
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("Ocp-Apim-Subscription-Key", subscriptionKey)
+            .addHeader("Subscription-Key", subscriptionKey)
+            .addHeader("Accept", "audio/wav")
+            .post(payload.toString().toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: java.io.IOException) {
+                Log.e(TAG, "GhanaNLP TTS chunk request failed", e)
+                // On failure, try to continue with next chunk
+                playNextChunk()
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                response.use {
+                    if (!response.isSuccessful) {
+                        val body = response.body?.string().orEmpty()
+                        Log.e(TAG, "GhanaNLP TTS chunk error ${response.code}: ${response.message}. Body: $body")
+
+                        // The docs show inconsistent language codes ("tw" vs "twi").
+                        // If the server rejects the language, retry once with the alternate.
+                        if (allowFallback && response.code == 400 && body.contains("Language", ignoreCase = true)) {
+                            val fallbackLanguage = when (language.lowercase()) {
+                                "tw" -> "twi"
+                                "twi" -> "tw"
+                                else -> null
+                            }
+                            if (fallbackLanguage != null) {
+                                Log.w(TAG, "Retrying TTS chunk once with fallback language=$fallbackLanguage")
+                                enqueueSynthesizeChunk(url, text, fallbackLanguage, speakerId, allowFallback = false)
+                            }
+                        } else {
+                            // On error, try to continue with next chunk
+                            playNextChunk()
+                        }
+                        return
+                    }
+
+                    val bytes = response.body?.bytes()
+                    if (bytes == null || bytes.isEmpty()) {
+                        Log.e(TAG, "GhanaNLP TTS chunk returned empty body")
+                        // Continue with next chunk
+                        playNextChunk()
+                        return
+                    }
+
+                    val outFile = File(context.cacheDir, "ghana_tts_chunk_${System.currentTimeMillis()}.wav")
+                    try {
+                        outFile.writeBytes(bytes)
+                    } catch (t: Throwable) {
+                        Log.e(TAG, "Failed to write chunk WAV to cache", t)
+                        // Continue with next chunk
+                        playNextChunk()
+                        return
+                    }
+
+                    mainHandler.post {
+                        try {
+                            mediaPlayer?.stop()
+                            mediaPlayer?.release()
+                            mediaPlayer = null
+
+                            mediaPlayer = MediaPlayer().apply {
+                                setDataSource(outFile.absolutePath)
+                                setOnCompletionListener {
+                                    try {
+                                        it.release()
+                                    } finally {
+                                        if (mediaPlayer === it) mediaPlayer = null
+                                        // Cleanup this chunk's file
+                                        outFile.delete()
+                                        // Play next chunk in sequence
+                                        playNextChunk()
+                                    }
+                                }
+                                setOnErrorListener { mp, _, _ ->
+                                    try {
+                                        mp.release()
+                                    } finally {
+                                        if (mediaPlayer === mp) mediaPlayer = null
+                                        outFile.delete()
+                                        // On error, try to continue with next chunk
+                                        playNextChunk()
+                                    }
+                                    true
+                                }
+                                prepare()
+                                start()
+                            }
+                        } catch (t: Throwable) {
+                            Log.e(TAG, "Failed to play GhanaNLP TTS chunk audio", t)
+                            outFile.delete()
+                            // On exception, try to continue with next chunk
+                            playNextChunk()
+                        }
+                    }
+                }
+            }
+        })
     }
 
     private fun enqueueSynthesize(
@@ -206,5 +402,6 @@ class GhanaNlpTts(
     private companion object {
         private val JSON_MEDIA_TYPE = "application/json".toMediaType()
         private const val TAG = "GhanaNlpTts"
+        private const val MAX_CHUNK_SIZE = 150 // Maximum characters per chunk to prevent audio breakages
     }
 }

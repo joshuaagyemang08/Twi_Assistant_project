@@ -995,12 +995,17 @@ private fun defaultAssistantViewModel(): AssistantViewModel {
                         onErrorMessage = onError
                     )
                 },
-                translationApiKey = if (BuildConfig.GOOGLE_TRANSLATE_API_KEY.isNotBlank()) {
-                    BuildConfig.GOOGLE_TRANSLATE_API_KEY
-                } else if (BuildConfig.GHANA_NLP_TRANSLATION_KEY.isNotBlank()) {
+                translationApiKey = if (BuildConfig.GHANA_NLP_TRANSLATION_KEY.isNotBlank()) {
                     BuildConfig.GHANA_NLP_TRANSLATION_KEY
+                } else if (BuildConfig.GOOGLE_TRANSLATE_API_KEY.isNotBlank()) {
+                    BuildConfig.GOOGLE_TRANSLATE_API_KEY
                 } else {
                     BuildConfig.GHANA_NLP_ASR_KEY
+                },
+                translationApiUrl = if (BuildConfig.GHANA_NLP_TRANSLATION_URL.isNotBlank()) {
+                    BuildConfig.GHANA_NLP_TRANSLATION_URL
+                } else {
+                    "https://translation-api.ghananlp.org/v1/translate"
                 },
                 httpClient = httpClient,
                 deviceActions = DeviceActions(context),
