@@ -1,0 +1,53 @@
+CAMERA PERMISSION FIX FOR TwiAssistant
+
+The issue: When user says "twa" (camera), the app doesn't have a permission launcher for camera, so it fails and shows "Please allow Sheri to access Contacts" (wrong message from generic exception handler).
+
+Fix: Add camera permission handling to AssistantHomeScreen.kt
+
+STEP 1: Add camera state variable (after line 175, in the var declarations section):
+-------
+    var cameraPermissionGranted by remember {
+        mutableStateOf(
+            androidx.core.content.ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+STEP 2: Add camera permission launcher (after contactsLauncher block, around line 190):
+-------
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { granted ->
+            cameraPermissionGranted = granted
+            if (granted) {
+                tts.speak("Camera enabled")
+                // User said camera, now open it
+                val intent = android.content.Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE).apply {
+                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(intent)
+            }
+        }
+    )
+
+STEP 3: Add camera permission check in LaunchedEffect(viewModel.executedAction) (after callPermission block, around line 216):
+-------
+            if (!cameraPermissionGranted && msg.contains("camera", ignoreCase = true)) {
+                cameraLauncher.launch(Manifest.permission.CAMERA)
+                return@LaunchedEffect
+            }
+
+STEP 4: Add camera permission check in LaunchedEffect(viewModel.lastError) (after callPermission block, around line 235):
+-------
+            if (!cameraPermissionGranted && err.contains("camera", ignoreCase = true)) {
+                cameraLauncher.launch(Manifest.permission.CAMERA)
+                return@LaunchedEffect
+            }
+
+After making these changes, rebuild and test. The app will now:
+1. Detect when camera action is requested
+2. Check if camera permission is granted
+3. If not, request the permission
+4. If granted, open the camera app
