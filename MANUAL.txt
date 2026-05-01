@@ -1,0 +1,69 @@
+Twi Assistant Manual
+
+Purpose
+
+Twi Assistant is an Android voice assistant that helps users perform common phone tasks through speech and simple device actions. It can make calls, send messages, open the camera, search, and use optional online services when configured.
+
+Setup
+
+1. Install Android Studio Giraffe or newer.
+2. Open the TwiAssistant project folder.
+3. Let Gradle sync and download dependencies.
+4. If you use external services, set the required API keys and URLs in local.properties or Gradle properties.
+5. Install the app on a device or emulator and open it from the launcher.
+
+First Run
+
+When the app starts for the first time, grant the requested permissions. The app needs microphone, contacts, SMS, phone, camera, and internet permissions for the related features to work.
+
+How To Use The App
+
+1. Open the app from your Android launcher.
+2. Allow the permissions the assistant requests.
+3. Tap the assistant button or microphone control.
+4. Speak a command clearly and wait for the app to respond.
+5. Follow the on-screen response if the app asks you to confirm a call, message, or other action.
+
+Common Actions
+
+- Calling a contact: ask the assistant to call a person in your contacts.
+- Sending a message: ask the assistant to send an SMS to a saved contact.
+- Camera use: ask the assistant to open or use the camera when a photo task is needed.
+- Search or online lookup: ask the assistant to search when internet access is available.
+- Speech features: speak normally and give the assistant a simple command at a time.
+
+Using Permissions Safely
+
+- Grant only the permissions you want the app to use.
+- If a feature fails, check whether the related permission is enabled in Android settings.
+- Reopen the app after changing permissions so it can refresh access.
+
+Optional Configuration
+
+You may set these optional service values in local.properties or Gradle properties if you want online speech, translation, or search features:
+
+- GHANA_NLP_ASR_URL
+- GHANA_NLP_ASR_KEY
+- GHANA_NLP_TTS_URL
+- GHANA_NLP_TTS_KEY
+- GHANA_NLP_TRANSLATION_URL
+- GHANA_NLP_TRANSLATION_KEY
+- GOOGLE_TRANSLATE_API_KEY
+- GOOGLE_SEARCH_CX
+- GEMINI_API_KEY
+
+Basic Troubleshooting
+
+- If the app does not hear you, check microphone permission and device input volume.
+- If calling or messaging does not work, confirm contacts and phone permissions.
+- If camera features fail, confirm camera permission.
+- If online features fail, verify the API keys and endpoints in your property files.
+
+Project Entry Points
+
+- Launcher activity: app/src/main/java/com/example/twiassistant/MainActivity.kt
+- App manifest: app/src/main/AndroidManifest.xml
+
+Maintenance Notes
+
+Update this manual whenever the app workflow, permissions, or external service configuration changes.

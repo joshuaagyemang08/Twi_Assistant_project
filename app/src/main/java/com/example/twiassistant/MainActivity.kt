@@ -35,8 +35,8 @@ class MainActivity : ComponentActivity() {
                         val ghanaUrl = if (BuildConfig.GHANA_NLP_ASR_URL.isNotBlank()) {
                             BuildConfig.GHANA_NLP_ASR_URL
                         } else {
-                            // Default to GhanaNLP ASR v2 endpoint when only a key is provided.
-                            "https://translation-api.ghananlp.org/asr/v2/transcribe"
+                            // Default to GhanaNLP ASR v1 endpoint when only a key is provided.
+                            "https://translation-api.ghananlp.org/asr/v1/transcribe"
                         }
 
                         if (ghanaKey.isNotBlank()) {

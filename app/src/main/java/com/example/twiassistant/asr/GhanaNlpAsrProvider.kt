@@ -23,8 +23,8 @@ class GhanaNlpAsrProvider(
     )
 
     /**
-     * GhanaNLP ASR v2
-     * POST https://translation-api.ghananlp.org/asr/v2/transcribe?language={language}
+     * GhanaNLP ASR (v1/v2/v3 depending on configured endpoint)
+     * POST https://translation-api.ghananlp.org/asr/v1/transcribe?language={language}
      * Header: Ocp-Apim-Subscription-Key: <key>
      * Body: binary audio
      */
@@ -66,7 +66,9 @@ class GhanaNlpAsrProvider(
         return when {
             trimmed.contains("{language}") -> trimmed.replace("{language}", language)
             trimmed.contains("?language=") -> trimmed
-            trimmed.endsWith("/asr/v2/transcribe") || trimmed.endsWith("/asr/v2/transcribe/") ->
+            trimmed.endsWith("/asr/v1/transcribe") || trimmed.endsWith("/asr/v1/transcribe/") ||
+                trimmed.endsWith("/asr/v2/transcribe") || trimmed.endsWith("/asr/v2/transcribe/") ||
+                trimmed.endsWith("/asr/v3/transcribe") || trimmed.endsWith("/asr/v3/transcribe/") ->
                 trimmed.trimEnd('/') + "?language=$language"
             else -> {
                 // If user passes the full endpoint (common), just append query safely.

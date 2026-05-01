@@ -959,7 +959,7 @@ private fun defaultAssistantViewModel(): AssistantViewModel {
                     val ghanaUrl = if (BuildConfig.GHANA_NLP_ASR_URL.isNotBlank()) {
                         BuildConfig.GHANA_NLP_ASR_URL
                     } else {
-                        "https://translation-api.ghananlp.org/asr/v2/transcribe"
+                        "https://translation-api.ghananlp.org/asr/v1/transcribe"
                     }
 
                     val keySuffix = if (ghanaKey.length >= 4) ghanaKey.takeLast(4) else "(none)"
